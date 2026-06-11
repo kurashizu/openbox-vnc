@@ -40,4 +40,3 @@ next-env.d.ts
 worker-configuration.d.ts
 
 # Wrangler
-wrangler.jsonc
