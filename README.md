@@ -26,7 +26,7 @@ This repo is a two-tier monorepo.
 | Path | Role | Tech |
 |---|---|---|
 | `./` (root) | Host controller + container image | Python 3 (FastAPI), Docker, Debian Bookworm, X11, Openbox, PulseAudio |
-| [`openbox-vnc/`](openbox-vnc/) | Cloudflare Workers frontend | Next.js 16, React 19, OpenNext Cloudflare, D1 |
+| [`openbox-vnc/`](openbox-vnc/) | Cloudflare Workers frontend (VNC viewer + domain mailbox) | Next.js 16, React 19, OpenNext Cloudflare, D1, Resend receiving |
 
 The frontend sub-project has its own [README](openbox-vnc/README.md) and [AGENTS.md](openbox-vnc/AGENTS.md); this file documents the whole system.
 
@@ -99,6 +99,42 @@ Any other path returns a 302 redirect to `https://openbox.022025.xyz/`.
 | `entrypoint.sh` | Container startup: Xorg, Openbox, x11vnc, fcitx5, audio stream |
 | `xorg.conf` | Modesetting driver with glamor for Intel GPU |
 | `cmd.md` | Dev cheatsheet (Xvfb, Firefox profile, x0vncserver) |
+
+## Domain mailbox (Resend + D1)
+
+The frontend also runs a **disposable, domain-based mailbox** on `@email.022025.xyz`. Pick any prefix (e.g. `verif-abc123`), use `<prefix>@email.022025.xyz` to sign up for third-party services, and read the verification code back in the **📧 Mailbox** modal on the dashboard.
+
+```mermaid
+graph LR
+    Sender["3rd-party service<br/>(sends verification email)"]
+    Resend["Resend<br/>email.022025.xyz receiving"]
+    Hook["/mailbox route.ts<br/>(webhook handler)"]
+    D1[("D1: emails table<br/>sliding window: 20/recipient")]
+    User["User in MailboxModal"]
+    Query["/api/email route.ts"]
+
+    Sender -->|SMTP| Resend
+    Resend -->|POST email.received| Hook
+    Hook -->|GET /emails/receiving/{id}<br/>Bearer RESEND_API_TOKEN| Resend
+    Hook -->|INSERT| D1
+    User -->|POST { to: prefix }| Query
+    Query -->|SELECT ... LIKE| D1
+```
+
+How it works:
+
+- **Resend** is configured to receive at `*@email.022025.xyz` and POSTs `email.received` events to `/mailbox` (this configuration lives in the Resend dashboard, not in this repo).
+- The webhook handler enriches each event by calling Resend's REST API with `RESEND_API_TOKEN`, then stores the full message (headers, html/text body, attachments metadata) in D1.
+- **Sliding window**: per-recipient cap of 20 most recent emails. The insert query first runs a `DELETE ... WHERE id IN (SELECT id FROM ranked WHERE rn > 19)` to evict older rows. A row is never deleted by time alone.
+- **Query** the mailbox via the `📧 Mailbox` button in the navbar: enter a prefix, the modal auto-appends `@email.022025.xyz`, and the last-searched address is persisted in `localStorage` (`mailbox_last_email` key).
+- The `to` field in the D1 row is stored as a JSON-serialized array (multi-recipient emails create one row per recipient), which is why the query uses `LIKE '%"<email>"%'` rather than equality.
+
+Implementation files:
+
+- `openbox-vnc/src/app/mailbox/route.ts` — Resend webhook handler (enrichment + insert)
+- `openbox-vnc/src/app/api/email/route.ts` — Query endpoint (`POST { to }`)
+- `openbox-vnc/src/components/MailboxModal.tsx` — UI (hard-codes `DOMAIN = "@email.022025.xyz"`)
+- `openbox-vnc/schema.sql` — D1 schema (`emails` table + indices on `to` and `created_at`)
 
 ## Security notes
 

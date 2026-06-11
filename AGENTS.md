@@ -48,6 +48,9 @@ These hold by design; do not "fix" them without a clear reason.
 - **Host reaches container via `host.docker.internal`.** `clipboard.py` posts to `http://host.docker.internal:6081/api/clipboard` because the container is on a bridge network.
 - **The host `app.py` is a pure orchestrator, not a desktop user.** It only knows how to start/stop the container and proxy WebSocket traffic. Don't add desktop logic to it.
 - **No API keys in `wrangler.jsonc` `vars`.** `vars` is for non-sensitive config; secrets go through `wrangler secret put` and are stored encrypted on Cloudflare's side. See [Secrets management](#secrets-management) below.
+- **Domain mailbox: Resend is the source of truth at the edge.** Inbound mail is captured by Resend for `*@email.022025.xyz` and delivered to the Worker via webhook — the Worker is *not* an MX server, it only enriches and stores what Resend gives it. Any change to routing rules, catch-all behavior, or DNS happens in the Resend dashboard, not in this repo.
+- **Domain mailbox: the `to` column is JSON-serialized.** Look at `openbox-vnc/src/app/mailbox/route.ts` — the `to` (and `cc`, `bcc`, `reply_to`, `attachments`) values are stored as `JSON.stringify(arr)` strings, not as a typed column. That's why `api/email/route.ts` queries with `LIKE '%"<email>"%'`. If you migrate the schema to a proper `to` column with an index, update the query to equality at the same time.
+- **Domain mailbox: 20-recipient sliding window is the only eviction mechanism.** There is no cron or TTL cleanup job for `expires_at`. The 24-hour `expires_at` is metadata only; rows stay in D1 until the 20-recipient cap evicts the oldest. If you need hard expiry, add a scheduled route (e.g. a Cloudflare Cron Trigger) that does `DELETE FROM emails WHERE expires_at < ?`.
 
 ## Key files
 
@@ -61,6 +64,10 @@ These hold by design; do not "fix" them without a clear reason.
 | `audio-server.py` | Changing audio codec, sample rate, channel layout |
 | `clipboard.py` | Changing clipboard sync direction or transport |
 | `cmd.md` | You need a one-off Xvfb / Firefox / x0vncserver command |
+| `openbox-vnc/schema.sql` | D1 schema for the domain mailbox (emails table) |
+| `openbox-vnc/src/app/mailbox/route.ts` | Resend receiving webhook handler (enriches event, inserts row) |
+| `openbox-vnc/src/app/api/email/route.ts` | Mailbox query endpoint (`POST { to }`) |
+| `openbox-vnc/src/components/MailboxModal.tsx` | Mailbox UI; hard-codes `@email.022025.xyz` |
 
 ## Ports cheat sheet
 
@@ -74,7 +81,7 @@ These hold by design; do not "fix" them without a clear reason.
 
 ## Secrets management
 
-- **Resend API key** (`RESEND_API_TOKEN`): set via `cd openbox-vnc && npx wrangler secret put RESEND_API_TOKEN`. Local dev value goes in `openbox-vnc/.dev.vars`.
+- **Resend API key** (`RESEND_API_TOKEN`): set via `cd openbox-vnc && npx wrangler secret put RESEND_API_TOKEN`. Local dev value goes in `openbox-vnc/.dev.vars`. It is read in `openbox-vnc/src/app/mailbox/route.ts` to enrich incoming `email.received` webhooks by fetching the full message from `https://api.resend.com/emails/receiving/{id}` — the webhook payload alone only carries metadata, so this enrichment step is required for the mailbox to store html/text bodies and attachments.
 - **Anything sensitive** (API keys, webhooks secrets, D1 tokens): never commit. Add to `.gitignore` and use `wrangler secret`.
 - **Rotation**: if a token ever appears in plaintext in the working tree (e.g., pasted in a chat, leaked in a backup), revoke it at the provider first, then re-issue. Don't just edit the file.
 
