@@ -1,0 +1,31 @@
+KRSZ Openbox (v1.0.0 - 22/May/2026)
+===================================
+
+Welcome to KRSZ Openbox, a lightweight and customizable
+desktop environment based on Openbox.
+
+This guide will help you get started with installing
+software and using basic features.
+
+
+[ Software Installation ]
+
+Homebrew
+  $ brew install software-name
+
+Flatpak
+  $ flatpak install flathub software-name
+  $ flatpak run software-name
+
+
+[ Input Method ]
+
+[Ctrl + Space]
+Switch between Chinese and English input.
+
+Or click the input method icon in the system tray,
+then press:
+
+[Shift]
+
+to switch between Chinese and English input.

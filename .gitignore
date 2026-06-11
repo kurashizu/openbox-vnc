@@ -1,0 +1,92 @@
+# ───────── Python (app.py / audio-server.py / clipboard.py) ─────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.python-version
+.uv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.tox/
+.nox/
+
+# uv 脚本自动生成的虚拟环境目录
+.venv-*/
+venv-*/
+
+# ───────── Node / Next.js / Cloudflare (openbox-vnc/) ─────────
+# 子项目 openbox-vnc/ 已有自己的 .gitignore，这里补一份兜底
+node_modules/
+.next/
+.open-next/
+.wrangler/
+.cache/
+.opencode/
+.cloudflare/
+*.tsbuildinfo
+next-env.d.ts
+worker-configuration.d.ts
+cloudflare-env.d.ts
+
+# ───────── 环境与密钥 ─────────
+.env
+.env.local
+.env.*.local
+.envrc
+.dev.vars
+*.pem
+*.key
+*.crt
+secrets/
+
+# ───────── 日志与运行时产物 ─────────
+*.log
+logs/
+mailbox.log
+pip-log.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ───────── Docker (保留 Dockerfile / docker-compose.yml) ─────────
+# 如果未来用 buildx，可能需要：
+# .docker/
+# 但当前不引入，避免误伤
+
+# ───────── IDE / 编辑器 ─────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.cursor/
+.aider*
+
+# ───────── OS ─────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ───────── 临时 / 备份 ─────────
+*.tmp
+*.bak
+*.orig
+*.rej
+tmp/
+temp/
+.cache/

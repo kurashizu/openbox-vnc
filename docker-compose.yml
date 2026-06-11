@@ -1,0 +1,27 @@
+services:
+    krsz-openbox:
+        build: .
+        container_name: krsz-openbox
+        mem_limit: 4g
+        memswap_limit: 6g
+        cpus: "3"
+        ports:
+            - "5908:5908"
+            - "6080:6080"
+            - "6082:6082"
+            - "6083:6083"
+        restart: unless-stopped
+        privileged: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        devices:
+            - /dev/dri:/dev/dri
+            - /dev/tty0:/dev/tty0
+            - /dev/tty1:/dev/tty1
+        group_add:
+            - video
+            - render
+        environment:
+            - LIBVA_DRIVER_NAME=iHD
+            - MESA_LOADER_DRIVER_OVERRIDE=iris
+            - VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json

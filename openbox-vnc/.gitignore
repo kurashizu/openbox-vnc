@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+.open-next/
+.wrangler/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Opencode
+.opencode/
+
+# Cloudflare
+.cloudflare/
+
+# TypeScript
+next-env.d.ts
+*.tsbuildinfo
+worker-configuration.d.ts
+
+# Wrangler
+wrangler.jsonc
