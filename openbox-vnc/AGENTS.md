@@ -52,4 +52,4 @@ AudioPlayer dispatches `audio-level` CustomEvent on window. dash/page.tsx listen
 
 ## Secrets
 
-`wrangler.jsonc` is gitignored. Use `vars` for non-sensitive config, or `npx wrangler secret put <NAME>` for secrets.
+`wrangler.jsonc` is tracked but only holds non-sensitive bindings (D1, compatibility date, assets, services, observability). For sensitive values like `RESEND_API_TOKEN`, use `npx wrangler secret put <NAME>` and store the value encrypted on Cloudflare's side. Local development uses `.dev.vars` (gitignored) — `wrangler dev` reads it automatically.
