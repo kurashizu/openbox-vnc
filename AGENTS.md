@@ -92,6 +92,7 @@ These hold by design; do not "fix" them without a clear reason.
 - **Don't** introduce new Python dependencies in `app.py` without adding them to the PEP 723 `# /// script` block at the top. `uv run` resolves from there.
 - **Don't** commit `mailbox.log` or any runtime artifacts. They're covered by the `*.log` rule in the root `.gitignore`.
 - **Don't** edit `xorg.conf`'s `Virtual` size without also updating the matching modesetting line in `Dockerfile` / `entrypoint.sh` — the X server will fail to start if the two disagree.
+- **Don't** put unquoted `{`, `}`, or `|` inside mermaid edge labels (e.g. `-->|...{id}...|`). GitHub's renderer parses `{` as a `DIAMOND_START` shape token and breaks the whole diagram. Wrap such labels in double quotes: `-->|"text {x} text"|`. The architecture diagrams in `README.md` are checked in working state — preserve the quoting if you add new edges.
 
 ## Cross-component changes
 
