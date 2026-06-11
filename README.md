@@ -115,9 +115,9 @@ graph LR
 
     Sender -->|SMTP| Resend
     Resend -->|POST email.received| Hook
-    Hook -->|GET /emails/receiving/{id}<br/>Bearer RESEND_API_TOKEN| Resend
+    Hook -->|"GET /emails/receiving/{id}<br/>Bearer RESEND_API_TOKEN"| Resend
     Hook -->|INSERT| D1
-    User -->|POST { to: prefix }| Query
+    User -->|"POST { to: prefix }"| Query
     Query -->|SELECT ... LIKE| D1
 ```
 
